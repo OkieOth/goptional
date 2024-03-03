@@ -1,2 +1,8 @@
-# go_optionaltypes
-Simple package that implements generic optional types
+[![ci](https://github.com/OkieOth/goptional/actions/workflows/test.yml/badge.svg)](https://github.com/OkieOth/goptional/actions/workflows/test.yml)
+
+# goptional
+After playing with Rust, I am a bit tired of pointers for optional
+values. This is an attempt to avoid nil values for business data
+types.
+
+
