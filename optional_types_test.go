@@ -7,7 +7,7 @@ import (
 
 func TestOptionalString(t *testing.T) {
 	var s Optional[string]
-	if s.IsSet {
+	if s.IsSet() {
 		t.Errorf("uninitialized value is set after creation")
 	}
 }
@@ -62,7 +62,7 @@ func (s DummyEnum) ValueFromStr(str string) error {
 
 func TestOptionalEnum(t *testing.T) {
 	var s OptionalEnum[DummyEnum]
-	if s.IsSet {
+	if s.IsSet() {
 		t.Errorf("uninitialized value is set after creation")
 	}
 }
