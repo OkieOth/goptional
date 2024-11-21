@@ -14,6 +14,19 @@ type Optional[C any] struct {
 	isSet bool
 }
 
+func NewOptionalValue[C any](v C) Optional[C] {
+	return Optional[C]{
+		value: v,
+		isSet: true,
+	}
+}
+
+func NewOptional[C any]() Optional[C] {
+	return Optional[C]{
+		isSet: false,
+	}
+}
+
 func (m *Optional[C]) Set(v C) {
 	m.value = v
 	m.isSet = true
@@ -57,6 +70,19 @@ func (v *Optional[C]) MarshalJSON() ([]byte, error) {
 type OptionalEnum[C EnumType] struct {
 	value C
 	isSet bool
+}
+
+func NewOptionalEnumValue[C EnumType](v C) OptionalEnum[C] {
+	return OptionalEnum[C]{
+		value: v,
+		isSet: true,
+	}
+}
+
+func NewOptionalEnum[C EnumType]() OptionalEnum[C] {
+	return OptionalEnum[C]{
+		isSet: false,
+	}
 }
 
 func (m *OptionalEnum[C]) Set(v C) {
