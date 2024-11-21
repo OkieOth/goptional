@@ -1,13 +1,15 @@
-package goptional
+package goptional_test
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/okieoth/goptional"
 )
 
 func TestOptionalString(t *testing.T) {
-	var s Optional[string]
-	if s.IsSet {
+	var s goptional.Optional[string]
+	if s.IsSet() {
 		t.Errorf("uninitialized value is set after creation")
 	}
 }
@@ -61,8 +63,91 @@ func (s DummyEnum) ValueFromStr(str string) error {
 }
 
 func TestOptionalEnum(t *testing.T) {
-	var s OptionalEnum[DummyEnum]
-	if s.IsSet {
+	var s goptional.OptionalEnum[DummyEnum]
+	if s.IsSet() {
 		t.Errorf("uninitialized value is set after creation")
 	}
+}
+
+type ListCont struct {
+	L1 []string
+	L2 goptional.Optional[[]string]
+}
+
+type ListContBuilder struct {
+	l1 []string
+	l2 goptional.Optional[[]string]
+}
+
+func (b *ListContBuilder) L1(v []string) *ListContBuilder {
+	b.l1 = v
+	return b
+}
+
+func (b *ListContBuilder) L2(v []string) *ListContBuilder {
+	b.l2.Set(v)
+	return b
+}
+
+func (b *ListContBuilder) Build() ListCont {
+	var ret ListCont
+	ret.L1 = b.l1
+	if b.l2.IsSet() {
+		ret.L2 = b.l2
+	}
+	return ret
+}
+
+func NewListContBuilder() *ListContBuilder {
+	var lb ListContBuilder
+	return &lb
+}
+
+func TestList(t *testing.T) {
+	var a []string
+	t1 := NewListContBuilder().
+		L1(a).
+		Build()
+
+	if len(t1.L1) != 0 {
+		t.Errorf("t1 doesn't have len 0")
+	}
+
+	t1.L1 = append(t1.L1, "test")
+
+	if len(t1.L1) != 1 {
+		t.Errorf("t1 doesn't contain a value")
+	}
+
+	if t1.L2.IsSet() {
+		t.Errorf("t1.L2 wrongly set")
+	}
+
+	t1.L2.Set(a)
+
+	if v, isSet := t1.L2.Get(); isSet {
+		v := append(v, "test2")
+		if v2, isSet := t1.L2.Get(); isSet {
+			if len(v2) != 0 {
+				t.Errorf("v2 has wrong value")
+			}
+		} else {
+			t.Errorf("t1.L2 couldn't get value (1)")
+		}
+		t1.L2.Set(v)
+		if v2, isSet := t1.L2.Get(); isSet {
+			if len(v2) != 1 {
+				t.Errorf("v2 has wrong value")
+			}
+		} else {
+			t.Errorf("t1.L2 couldn't get value (1)")
+		}
+	} else {
+		t.Errorf("t1.L2 couldn't get value (2)")
+	}
+
+	if !t1.L2.IsSet() {
+		t.Errorf("t1.L2 should be set")
+	}
+
 }

@@ -1,3 +1,8 @@
+# 1.0.0
+* introduce 'Get' method
+* remove visibility for optional struct members
+* more examples
+
 # 0.4.0
 * move package implementation to the root of the repo
 
