@@ -10,13 +10,13 @@ type EnumType interface {
 }
 
 type Optional[C any] struct {
-	value C
+	Value C
 	isSet bool
 }
 
 func NewOptionalValue[C any](v C) Optional[C] {
 	return Optional[C]{
-		value: v,
+		Value: v,
 		isSet: true,
 	}
 }
@@ -28,7 +28,7 @@ func NewOptional[C any]() Optional[C] {
 }
 
 func (m *Optional[C]) Set(v C) {
-	m.value = v
+	m.Value = v
 	m.isSet = true
 }
 
@@ -37,7 +37,7 @@ func (m *Optional[C]) UnSet() {
 }
 
 func (m *Optional[C]) Get() (C, bool) {
-	return m.value, m.isSet
+	return m.Value, m.isSet
 }
 
 func (m *Optional[C]) IsSet() bool {
@@ -50,7 +50,7 @@ func (v *Optional[C]) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	err := json.Unmarshal(data, &v.value)
+	err := json.Unmarshal(data, &v.Value)
 	if err != nil {
 		return err
 	}
@@ -68,13 +68,13 @@ func (v *Optional[C]) MarshalJSON() ([]byte, error) {
 }
 
 type OptionalEnum[C EnumType] struct {
-	value C
+	Value C
 	isSet bool
 }
 
 func NewOptionalEnumValue[C EnumType](v C) OptionalEnum[C] {
 	return OptionalEnum[C]{
-		value: v,
+		Value: v,
 		isSet: true,
 	}
 }
@@ -86,7 +86,7 @@ func NewOptionalEnum[C EnumType]() OptionalEnum[C] {
 }
 
 func (m *OptionalEnum[C]) Set(v C) {
-	m.value = v
+	m.Value = v
 	m.isSet = true
 }
 
@@ -95,7 +95,7 @@ func (m *OptionalEnum[C]) UnSet() {
 }
 
 func (m *OptionalEnum[C]) Get() (C, bool) {
-	return m.value, m.isSet
+	return m.Value, m.isSet
 }
 
 func (m *OptionalEnum[C]) IsSet() bool {
@@ -113,7 +113,7 @@ func (v *OptionalEnum[C]) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	err = v.value.ValueFromStr(s)
+	err = v.Value.ValueFromStr(s)
 	if err != nil {
 		return err
 	}
