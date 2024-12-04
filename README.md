@@ -6,3 +6,8 @@ values. This is an attempt to avoid nil values for business data
 types.
 
 
+```bash
+# How to include
+go get github.com/okieoth/goptional
+```
+

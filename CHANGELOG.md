@@ -1,3 +1,6 @@
+# 2.0.0
+* made 'Value' attribute visible again
+
 # 1.0.0
 * introduce 'Get' method
 * remove visibility for optional struct members
