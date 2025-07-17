@@ -1,25 +1,38 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+' # Push events to matching v*, i.e. v1.0, v20.15.10
+    push:
+        branches: [main]
 
 jobs:
-  build:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body_path: CHANGELOG.md
-          draft: false
-          prerelease: false
+    tag_repo:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Extract version from cmd/sub/version.go
+              id: get_version
+              run: |
+                  TAG_NAME=$(cat version.txt)
+                  echo "tag_name=$TAG_NAME" >> $GITHUB_ENV
+            - name: Create a tag
+              env:
+                  TAG_NAME: ${{ env.tag_name }}
+              uses: actions/github-script@v5
+              with:
+                  script: |
+                      github.rest.git.createRef({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      ref: `refs/tags/${process.env.TAG_NAME}`,
+                      sha: context.sha
+                      })
+            - name: Checkout repository
+              uses: actions/checkout@v4
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ env.tag_name }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

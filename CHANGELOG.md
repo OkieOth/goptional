@@ -1,3 +1,7 @@
+# 3.0.0
+* yaml serialization, attention!!! omitzero doesn't work, it panics
+* improved json serialization, omitzero works
+
 # 2.0.0
 * made 'Value' attribute visible again
 
