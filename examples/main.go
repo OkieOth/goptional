@@ -49,6 +49,10 @@ type Demo struct {
 	OptionalEnum  goptional.OptionalEnum[DummyEnum]
 }
 
+func NewDemo() Demo {
+	return Demo{}
+}
+
 type DemoBuilder struct {
 	id            goptional.Optional[int64]
 	list          goptional.Optional[[]DummyEnum]
@@ -64,32 +68,32 @@ func NewDemoBuilder() *DemoBuilder {
 }
 
 func (b *DemoBuilder) Id(v int64) *DemoBuilder {
-	b.id.Set(v)
+	b.id = b.id.Set(v)
 	return b
 }
 
 func (b *DemoBuilder) List(v []DummyEnum) *DemoBuilder {
-	b.list.Set(v)
+	b.list = b.list.Set(v)
 	return b
 }
 
 func (b *DemoBuilder) OptionalMap(v map[string]int32) *DemoBuilder {
-	b.optionalMap.Set(v)
+	b.optionalMap = b.optionalMap.Set(v)
 	return b
 }
 
 func (b *DemoBuilder) OptionalList(v []string) *DemoBuilder {
-	b.optionalList.Set(v)
+	b.optionalList = b.optionalList.Set(v)
 	return b
 }
 
 func (b *DemoBuilder) OptionalList2(v [][]DummyEnum) *DemoBuilder {
-	b.optionalList2.Set(v)
+	b.optionalList2 = b.optionalList2.Set(v)
 	return b
 }
 
 func (b *DemoBuilder) OptionalEnum(v DummyEnum) *DemoBuilder {
-	b.optionalEnum.Set(v)
+	b.optionalEnum = b.optionalEnum.Set(v)
 	return b
 }
 
@@ -120,14 +124,28 @@ func (b *DemoBuilder) Build() (Demo, error) {
 	return r, nil
 }
 
-func main() {
+func initializedViaBuilder() {
 	if demoInst, err := NewDemoBuilder().
 		Id(1).
 		List([]DummyEnum{V1, V2}).
 		OptionalMap(map[string]int32{"A": 1, "B": 2}).
 		Build(); err == nil {
-		fmt.Printf("Demo: %v", demoInst)
+		fmt.Printf("Demo: %v\n", demoInst)
 	} else {
 		fmt.Printf("Error while creating Demo object: %v", err)
 	}
+}
+
+func initializedWithoutBuilder() {
+	demoInst := Demo{
+		Id:          1,
+		List:        []DummyEnum{V1},
+		OptionalMap: goptional.NewOptionalValue(map[string]int32{"A": 1, "B": 2}),
+	}
+	fmt.Printf("Demo: %v\n", demoInst)
+}
+
+func main() {
+	initializedViaBuilder()
+	initializedWithoutBuilder()
 }

@@ -1,17 +1,46 @@
 package goptional_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/okieoth/goptional"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestOptionalString(t *testing.T) {
 	var s goptional.Optional[string]
-	if s.IsSet() {
-		t.Errorf("uninitialized value is set after creation")
-	}
+	require.False(t, s.IsSet())
+
+	s = s.Set("test")
+	v, b := s.Get()
+	require.True(t, b)
+	require.Equal(t, "test", v)
+	s1 := s.IfSetThenDo(func(val string) (string, bool) {
+		require.Equal(t, "test", v, "setting a value failed")
+		return val, false
+	})
+	require.Equal(t, s, s1)
+	s2 := s1.IfSetThenDo(func(val string) (string, bool) {
+		require.Equal(t, "test", v, "setting a value failed")
+		return "newTest", true
+	})
+	require.NotEqual(t, s1, s2)
+	v, b = s2.Get()
+	require.True(t, b)
+	require.Equal(t, "newTest", v)
+}
+
+type Demo struct {
+	Id            int64                                `yaml:"id,omitempty" json:"id,omitempty"`
+	List          []DummyEnum                          `yaml:"list,omitempty" json:"list,omitempty"`
+	OptionalMap   goptional.Optional[map[string]int32] `yaml:"omap,omitempty" json:"omap,omitzero"`
+	OptionalList  goptional.Optional[[]string]         `yaml:"olist,omitempty" json:"olist,omitzero"`
+	OptionalList2 goptional.Optional[[][]DummyEnum]    `yaml:"olist2,omitempty" json:"olist2,omitzero"`
+	OptionalEnum  goptional.OptionalEnum[DummyEnum]    `yaml:"oenum,omitempty" json:"oenum,omitzero"`
 }
 
 type DummyEnum int64
@@ -64,90 +93,107 @@ func (s DummyEnum) ValueFromStr(str string) error {
 
 func TestOptionalEnum(t *testing.T) {
 	var s goptional.OptionalEnum[DummyEnum]
-	if s.IsSet() {
-		t.Errorf("uninitialized value is set after creation")
+	require.False(t, s.IsSet())
+
+	s = s.Set(value3)
+	v, b := s.Get()
+	require.True(t, b)
+	require.Equal(t, value3, v)
+	s1 := s.IfSetThenDo(func(val DummyEnum) (DummyEnum, bool) {
+		require.Equal(t, value3, v, "setting a value failed")
+		return val, false
+	})
+	require.Equal(t, s, s1)
+	s2 := s1.IfSetThenDo(func(val DummyEnum) (DummyEnum, bool) {
+		require.Equal(t, value3, v, "setting a value failed")
+		return value5, true
+	})
+	require.NotEqual(t, s1, s2)
+	v, b = s2.Get()
+	require.True(t, b)
+	require.Equal(t, value5, v)
+}
+
+func TestJson(t *testing.T) {
+	tests := []struct {
+		value    Demo
+		destFile string
+	}{
+		{
+			value: Demo{
+				Id:   13,
+				List: []DummyEnum{value1, value3},
+			},
+			destFile: "temp/demo_01.json",
+		},
+		{
+			value: Demo{
+				Id:           13,
+				List:         []DummyEnum{value1, value3},
+				OptionalList: goptional.NewOptionalValue([]string{"eins", "zwei", "drei"}),
+			},
+			destFile: "temp/demo_02.json",
+		},
 	}
-}
-
-type ListCont struct {
-	L1 []string
-	L2 goptional.Optional[[]string]
-}
-
-type ListContBuilder struct {
-	l1 []string
-	l2 goptional.Optional[[]string]
-}
-
-func (b *ListContBuilder) L1(v []string) *ListContBuilder {
-	b.l1 = v
-	return b
-}
-
-func (b *ListContBuilder) L2(v []string) *ListContBuilder {
-	b.l2.Set(v)
-	return b
-}
-
-func (b *ListContBuilder) Build() ListCont {
-	var ret ListCont
-	ret.L1 = b.l1
-	if b.l2.IsSet() {
-		ret.L2 = b.l2
-	}
-	return ret
-}
-
-func NewListContBuilder() *ListContBuilder {
-	var lb ListContBuilder
-	return &lb
-}
-
-func TestList(t *testing.T) {
-	var a []string
-	t1 := NewListContBuilder().
-		L1(a).
-		Build()
-
-	if len(t1.L1) != 0 {
-		t.Errorf("t1 doesn't have len 0")
-	}
-
-	t1.L1 = append(t1.L1, "test")
-
-	if len(t1.L1) != 1 {
-		t.Errorf("t1 doesn't contain a value")
-	}
-
-	if t1.L2.IsSet() {
-		t.Errorf("t1.L2 wrongly set")
-	}
-
-	t1.L2.Set(a)
-
-	if v, isSet := t1.L2.Get(); isSet {
-		v := append(v, "test2")
-		if v2, isSet := t1.L2.Get(); isSet {
-			if len(v2) != 0 {
-				t.Errorf("v2 has wrong value")
-			}
-		} else {
-			t.Errorf("t1.L2 couldn't get value (1)")
+	for _, test := range tests {
+		if _, err := os.Stat(test.destFile); err != nil {
+			os.Remove(test.destFile)
+			bOut, err := json.MarshalIndent(test.value, "", "  ")
+			require.Nil(t, err)
+			err = os.WriteFile(test.destFile, bOut, 0644)
+			require.Nil(t, err)
+			bIn, err := os.ReadFile(test.destFile)
+			require.Nil(t, err)
+			var d Demo
+			err = json.Unmarshal(bIn, &d)
+			require.Nil(t, err)
+			require.Equal(t, test.value, d)
 		}
-		t1.L2.Set(v)
-		if v2, isSet := t1.L2.Get(); isSet {
-			if len(v2) != 1 {
-				t.Errorf("v2 has wrong value")
-			}
-		} else {
-			t.Errorf("t1.L2 couldn't get value (1)")
+	}
+
+	//    Id            int64                                `yaml:"id,omitempty" json:"id,omitempty"`
+	// List          []DummyEnum                          `yaml:"list,omitempty" json:"list,omitempty"`
+	// OptionalMap   goptional.Optional[map[string]int32] `yaml:"omap,omitempty" json:"omap,omitempty"`
+	// OptionalList  goptional.Optional[[]string]         `yaml:"olist,omitempty" json:"olist,omitempty"`
+	// OptionalList2 goptional.Optional[[][]DummyEnum]    `yaml:"olist2,omitempty" json:"olist2,omitempty"`
+	// OptionalEnum  goptional.OptionalEnum[DummyEnum]    `yaml:"oenum,omitempty" json:"oenum,omitempty"`
+
+}
+
+func TestYaml(t *testing.T) {
+	tests := []struct {
+		value    Demo
+		destFile string
+	}{
+		{
+			value: Demo{
+				Id:   13,
+				List: []DummyEnum{value1, value3},
+			},
+			destFile: "temp/demo_01.yaml",
+		},
+		{
+			value: Demo{
+				Id:           13,
+				List:         []DummyEnum{value1, value3},
+				OptionalList: goptional.NewOptionalValue([]string{"eins", "zwei", "drei"}),
+			},
+			destFile: "temp/demo_02.yaml",
+		},
+	}
+	for _, test := range tests {
+		if _, err := os.Stat(test.destFile); err != nil {
+			os.Remove(test.destFile)
+			bOut, err := yaml.Marshal(test.value)
+			require.Nil(t, err)
+			err = os.WriteFile(test.destFile, bOut, 0644)
+			require.Nil(t, err)
+			bIn, err := os.ReadFile(test.destFile)
+			require.Nil(t, err)
+			var d Demo
+			err = yaml.Unmarshal(bIn, &d)
+			require.Nil(t, err)
+			require.Equal(t, test.value, d)
 		}
-	} else {
-		t.Errorf("t1.L2 couldn't get value (2)")
 	}
-
-	if !t1.L2.IsSet() {
-		t.Errorf("t1.L2 should be set")
-	}
-
 }
