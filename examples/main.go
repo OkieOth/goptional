@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/okieoth/goptional"
+	"github.com/okieoth/goptional/v3"
 )
 
 type DummyEnum int64

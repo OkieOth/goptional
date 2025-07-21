@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/okieoth/goptional"
+	"github.com/okieoth/goptional/v3"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
