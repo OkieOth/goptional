@@ -29,6 +29,13 @@ func NewOptional[C any]() Optional[C] {
 	return Optional[C]{}
 }
 
+func NewOptionalConditional[C any](v C, condFunc func(v C) bool) Optional[C] {
+	if condFunc(v) {
+		return NewOptionalValue(v)
+	}
+	return NewOptional[C]()
+}
+
 func (m Optional[C]) Set(v C) Optional[C] {
 	return Optional[C]{
 		Value: v,
