@@ -1,3 +1,6 @@
+# 3.1.0
+* add NewOptionalConditional for conditional assignment
+
 # 3.0.0
 * yaml serialization, attention!!! omitzero doesn't work, it panics
 * improved json serialization, omitzero works

@@ -197,3 +197,19 @@ func TestYaml(t *testing.T) {
 		}
 	}
 }
+
+func TestNewOptionalConditional(t *testing.T) {
+	o1 := goptional.NewOptionalConditional(10, func(i int) bool { return i != 10 })
+	_, isSet := o1.Get()
+	require.False(t, isSet)
+	o2 := goptional.NewOptionalConditional(10, func(i int) bool { return i != 0 })
+	i2, isSet := o2.Get()
+	require.True(t, isSet)
+	require.Equal(t, 10, i2)
+	o3 := goptional.NewOptionalConditional("", func(i string) bool { return i != "" })
+	_, isSet = o3.Get()
+	require.False(t, isSet)
+	o4 := goptional.NewOptionalConditional("xxx", func(i string) bool { return i != "" })
+	s, isSet := o4.Get()
+	require.Equal(t, "xxx", s)
+}
